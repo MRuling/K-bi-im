@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kübişime minik hediye</title>
+<style>
+body, html {
+  margin:0; padding:0; height:100%; background:#2c2f33;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow:hidden;
+}
+
+/* Arka plan yağmur */
+#rain-container {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  pointer-events:none; z-index:0; overflow:hidden;
+}
+.raindrop {
+  position: absolute; width:2px; height:10px;
+  background: rgba(173,216,230,0.6);
+  animation: fall linear infinite;
+}
+@keyframes fall {
+  0% { transform: translateY(-10px); opacity:0.6; }
+  100% { transform: translateY(100vh); opacity:0; }
+}
+
+/* Flipbook container */
+#container {
+  position: relative; width:90vw; height:80vh; margin:5vh auto;
+  perspective:2000px; display:flex; justify-content:center; z-index:1;
+}
+
+/* Sayfalar */
+.page {
+  position: absolute; width:45%; height:100%; background:white;
+  border-radius:12px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  transform-origin: right center; /* sağdan sola katlama */
+  transition: transform 0.8s ease, z-index 0.8s ease;
+  overflow:hidden;
+}
+.page canvas { width:100%; height:100%; display:block; }
+</style>
+</head>
+<body>
+
+<div id="rain-container"></div>
+<div id="container"></div>
+
+<audio id="flip-sound" src="./page-flip1-178322.mp3"></audio>
+<audio id="rain-sound" src="./rain-weather-lightning-thunder-151314.mp3" loop autoplay></audio>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.7.107/pdf.min.js"></script>
+<script>
+const PDF_URL = './tmpqns3v6wo-decrypted.pdf';
+const container = document.getElementById('container');
+const flipSound = document.getElementById('flip-sound');
+const rainSound = document.getElementById('rain-sound');
+
+let pdfDoc = null;
+let currentPage = 1;
+let pages = [];
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.7.107/pdf.worker.min.js';
+
+// PDF yükleme
+async function loadPDF() {
+  pdfDoc = await pdfjsLib.getDocument(PDF_URL).promise;
+  for(let i=1;i<=pdfDoc.numPages;i++){
+    const pageDiv = document.createElement('div');
+    pageDiv.classList.add('page');
+    pageDiv.style.zIndex = pdfDoc.numPages-i+1;
+    const canvas = document.createElement('canvas');
+    pageDiv.appendChild(canvas);
+    container.appendChild(pageDiv);
+    pages.push(pageDiv);
+
+    const page = await pdfDoc.getPage(i);
+    const viewport = page.getViewport({scale:1.2});
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({canvasContext: canvas.getContext('2d'), viewport}).promise;
+  }
+}
+
+// Sağdan sola katlama
+function turnNext(){
+  if(currentPage < pages.length){
+    const page = pages[currentPage-1];
+    page.style.transformOrigin = 'right center';
+    page.style.transform = 'rotateY(-180deg)';
+    page.style.zIndex = 0;
+    currentPage++;
+    flipSound.play();
+  }
+}
+function turnPrev(){
+  if(currentPage > 1){
+    currentPage--;
+    const page = pages[currentPage-1];
+    page.style.transform = 'rotateY(0deg)';
+    page.style.zIndex = pages.length - currentPage +1;
+    flipSound.play();
+  }
+}
+
+// Mobil çift dokunma
+let lastTap = 0;
+document.addEventListener('touchend', function(e){
+  const currentTime = new Date().getTime();
+  const tapLength = currentTime - lastTap;
+  const touchX = e.changedTouches[0].clientX;
+  if(tapLength < 300 && tapLength > 0){
+    if(touchX > window.innerWidth/2){
+      turnNext();
+    } else {
+      turnPrev();
+    }
+  }
+  lastTap = currentTime;
+});
+
+// Yağmur efekti
+function createRain() {
+  const container = document.getElementById('rain-container');
+  const drops = 100;
+  for(let i=0;i<drops;i++){
+    const drop = document.createElement('div');
+    drop.className = 'raindrop';
+    drop.style.left = Math.random()*100 + 'vw';
+    drop.style.animationDuration = (0.5+Math.random()*1.5)+'s';
+    drop.style.animationDelay = (Math.random()*5)+'s';
+    container.appendChild(drop);
+  }
+}
+
+// Başlat
+window.onload = () => {
+  loadPDF();
+  createRain();
+  rainSound.play().catch(()=>console.warn('Tarayıcı otomatik oynatmayı engelledi.'));
+}
+</script>
+</body>
+</html>
