@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kitap Kurdu Kübişim için tatlı bir süpriz</title>
+<title>😘💗🖤🩷😊🎁</title>
 <style>
 body, html {
   margin:0; padding:0; height:100%; background:#2c2f33;
@@ -109,11 +109,19 @@ function turnNext(){
     pages[currentPage].style.display = 'block';
     flipSound.play();
     
-    // İlk geçişte yağmur başlasın
     if(!rainStarted){
       startRain();
       rainStarted = true;
     }
+  }
+}
+
+function turnPrev(){
+  if(currentPage > 0){
+    pages[currentPage].style.display = 'none';
+    currentPage--;
+    pages[currentPage].style.display = 'block';
+    flipSound.play();
   }
 }
 
@@ -137,21 +145,24 @@ function startRain() {
   try { rainSound.play(); } catch(e){ console.warn(e); }
 }
 
-// Dokunma veya tıklama ile sayfa geçişi (mobil)
+// Dokunma ile sağ/sol sayfa kontrolü
 function setupNavigation(){
   document.addEventListener('touchend', function(e){
-    turnNext();
-  });
-  document.addEventListener('click', function(e){
-    turnNext();
+    const touchX = e.changedTouches[0].clientX;
+    if(touchX > window.innerWidth/2) turnNext();
+    else turnPrev();
   });
 }
 
-// Başlat
 window.onload = async () => {
   await loadPDF();
   initPages();
   setupNavigation();
+  // İlk sayfada yağmur otomatik başlasın
+  if(!rainStarted){
+    startRain();
+    rainStarted = true;
+  }
 }
 </script>
 
