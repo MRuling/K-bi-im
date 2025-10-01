@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎁😊🩷🖤💗💗😘🤍</title>
+<title>Kübişime özel hediye</title>
 <style>
 body, html {
   margin:0; padding:0; height:100%; background:#2c2f33;
@@ -44,12 +44,36 @@ body, html {
   height:100%;
   display:block;
 }
+.turn-btn {
+  position:absolute;
+  top:50%;
+  width:60px; height:60px;
+  background:#f3ec78; border-radius:50%;
+  display:flex; justify-content:center; align-items:center;
+  cursor:pointer; user-select:none;
+  box-shadow:0 0 12px #eeff90, inset 0 0 12px #fffba6;
+  border:2px solid #cddc39;
+  z-index:2;
+  transform: translateY(-50%);
+}
+#prev-btn { left:10px; }
+#next-btn { right:10px; }
+.turn-btn:hover { background:#dbd54a; }
+.turn-btn svg { fill:#61892f; width:28px; height:28px; }
 </style>
 </head>
 <body>
 
 <div id="rain-container"></div>
 <div id="container"></div>
+
+<!-- Sayfa geçiş butonları -->
+<div id="prev-btn" class="turn-btn">
+  <svg viewBox="0 0 20 20"><polyline points="13 4 7 10 13 16" stroke-width="2" stroke="#61892f" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
+<div id="next-btn" class="turn-btn">
+  <svg viewBox="0 0 20 20"><polyline points="7 4 13 10 7 16" stroke-width="2" stroke="#61892f" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
 
 <audio id="flip-sound" src="./page-flip1-178322.mp3"></audio>
 <audio id="rain-sound" src="./rain-weather-lightning-thunder-151314.mp3" loop></audio>
@@ -100,6 +124,7 @@ function turnNext(){
     currentPage++;
     pages[currentPage].style.display = 'block';
     flipSound.play();
+    if(!rainStarted){ startRain(); rainStarted = true; }
   }
 }
 function turnPrev(){
@@ -124,31 +149,19 @@ function createRain() {
     container.appendChild(drop);
   }
 }
-
-// Yağmur başlatma ve sesi
 function startRain(){
   createRain();
   try { rainSound.play(); } catch(e){ console.warn(e); }
 }
 
-// Mobil tıklama ve dokunma
-function setupNavigation(){
-  const handleTouch = (x) => {
-    if(!rainStarted){
-      startRain();
-      rainStarted = true;
-    }
-    if(x > window.innerWidth/2) turnNext();
-    else turnPrev();
-  }
-  document.addEventListener('touchstart', e => handleTouch(e.touches[0].clientX));
-  document.addEventListener('click', e => handleTouch(e.clientX));
-}
+// Butonlara tıklama
+document.getElementById('next-btn').addEventListener('click', turnNext);
+document.getElementById('prev-btn').addEventListener('click', turnPrev);
 
+// Başlat
 window.onload = async () => {
   await loadPDF();
   initPages();
-  setupNavigation();
 }
 </script>
 
