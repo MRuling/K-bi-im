@@ -3,14 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>😘💗🖤🩷😊🎁</title>
+<title>🎁😊🩷🖤💗💗😘🤍</title>
 <style>
 body, html {
   margin:0; padding:0; height:100%; background:#2c2f33;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow:hidden;
 }
-
-/* Arka plan yağmur */
 #rain-container {
   position: fixed;
   top:0; left:0; width:100%; height:100%; pointer-events:none;
@@ -26,8 +24,6 @@ body, html {
   0% { transform: translateY(-10px); opacity:0.6; }
   100% { transform: translateY(100vh); opacity:0; }
 }
-
-/* Flipbook container */
 #container {
   position: relative;
   width:100vw;
@@ -35,8 +31,6 @@ body, html {
   margin:0 auto;
   z-index:1;
 }
-
-/* Sayfalar */
 .page {
   position: absolute;
   width:100%;
@@ -57,7 +51,6 @@ body, html {
 <div id="rain-container"></div>
 <div id="container"></div>
 
-<!-- Sesler -->
 <audio id="flip-sound" src="./page-flip1-178322.mp3"></audio>
 <audio id="rain-sound" src="./rain-weather-lightning-thunder-151314.mp3" loop></audio>
 
@@ -88,8 +81,7 @@ async function loadPDF() {
     pages.push(pageDiv);
 
     const page = await pdfDoc.getPage(i);
-    const scale = 1.0; // mobil tam ekran
-    const viewport = page.getViewport({scale});
+    const viewport = page.getViewport({scale:1.0});
     canvas.width = viewport.width;
     canvas.height = viewport.height;
     await page.render({canvasContext: canvas.getContext('2d'), viewport}).promise;
@@ -108,14 +100,8 @@ function turnNext(){
     currentPage++;
     pages[currentPage].style.display = 'block';
     flipSound.play();
-    
-    if(!rainStarted){
-      startRain();
-      rainStarted = true;
-    }
   }
 }
-
 function turnPrev(){
   if(currentPage > 0){
     pages[currentPage].style.display = 'none';
@@ -140,29 +126,29 @@ function createRain() {
 }
 
 // Yağmur başlatma ve sesi
-function startRain() {
+function startRain(){
   createRain();
   try { rainSound.play(); } catch(e){ console.warn(e); }
 }
 
-// Dokunma ile sağ/sol sayfa kontrolü
+// Mobil tıklama ve dokunma
 function setupNavigation(){
-  document.addEventListener('touchend', function(e){
-    const touchX = e.changedTouches[0].clientX;
-    if(touchX > window.innerWidth/2) turnNext();
+  const handleTouch = (x) => {
+    if(!rainStarted){
+      startRain();
+      rainStarted = true;
+    }
+    if(x > window.innerWidth/2) turnNext();
     else turnPrev();
-  });
+  }
+  document.addEventListener('touchstart', e => handleTouch(e.touches[0].clientX));
+  document.addEventListener('click', e => handleTouch(e.clientX));
 }
 
 window.onload = async () => {
   await loadPDF();
   initPages();
   setupNavigation();
-  // İlk sayfada yağmur otomatik başlasın
-  if(!rainStarted){
-    startRain();
-    rainStarted = true;
-  }
 }
 </script>
 
