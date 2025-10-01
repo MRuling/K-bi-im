@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kübişime minik hediye</title>
+<title>Kitap Kurdu Kübişim için tatlı bir süpriz</title>
 <style>
 body, html {
   margin:0; padding:0; height:100%; background:#2c2f33;
@@ -12,11 +12,13 @@ body, html {
 
 /* Arka plan yağmur */
 #rain-container {
-  position: fixed; top:0; left:0; width:100%; height:100%;
-  pointer-events:none; z-index:0; overflow:hidden;
+  position: fixed;
+  top:0; left:0; width:100%; height:100%; pointer-events:none;
+  z-index:0; overflow:hidden;
 }
 .raindrop {
-  position: absolute; width:2px; height:10px;
+  position: absolute;
+  width:2px; height:10px;
   background: rgba(173,216,230,0.6);
   animation: fall linear infinite;
 }
@@ -27,19 +29,27 @@ body, html {
 
 /* Flipbook container */
 #container {
-  position: relative; width:90vw; height:80vh; margin:5vh auto;
-  perspective:2000px; display:flex; justify-content:center; z-index:1;
+  position: relative;
+  width:100vw;
+  height:100vh;
+  margin:0 auto;
+  z-index:1;
 }
 
 /* Sayfalar */
 .page {
-  position: absolute; width:45%; height:100%; background:white;
-  border-radius:12px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-  transform-origin: right center; /* sağdan sola katlama */
-  transition: transform 0.8s ease, z-index 0.8s ease;
+  position: absolute;
+  width:100%;
+  height:100%;
+  background:white;
   overflow:hidden;
+  top:0; left:0;
 }
-.page canvas { width:100%; height:100%; display:block; }
+.page canvas {
+  width:100%;
+  height:100%;
+  display:block;
+}
 </style>
 </head>
 <body>
@@ -47,8 +57,9 @@ body, html {
 <div id="rain-container"></div>
 <div id="container"></div>
 
+<!-- Sesler -->
 <audio id="flip-sound" src="./page-flip1-178322.mp3"></audio>
-<audio id="rain-sound" src="./rain-weather-lightning-thunder-151314.mp3" loop autoplay></audio>
+<audio id="rain-sound" src="./rain-weather-lightning-thunder-151314.mp3" loop></audio>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.7.107/pdf.min.js"></script>
 <script>
@@ -58,8 +69,9 @@ const flipSound = document.getElementById('flip-sound');
 const rainSound = document.getElementById('rain-sound');
 
 let pdfDoc = null;
-let currentPage = 1;
+let currentPage = 0;
 let pages = [];
+let rainStarted = false;
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.7.107/pdf.worker.min.js';
 
@@ -76,70 +88,72 @@ async function loadPDF() {
     pages.push(pageDiv);
 
     const page = await pdfDoc.getPage(i);
-    const viewport = page.getViewport({scale:1.2});
+    const scale = 1.0; // mobil tam ekran
+    const viewport = page.getViewport({scale});
     canvas.width = viewport.width;
     canvas.height = viewport.height;
     await page.render({canvasContext: canvas.getContext('2d'), viewport}).promise;
   }
 }
 
-// Sağdan sola katlama
-function turnNext(){
-  if(currentPage < pages.length){
-    const page = pages[currentPage-1];
-    page.style.transformOrigin = 'right center';
-    page.style.transform = 'rotateY(-180deg)';
-    page.style.zIndex = 0;
-    currentPage++;
-    flipSound.play();
-  }
-}
-function turnPrev(){
-  if(currentPage > 1){
-    currentPage--;
-    const page = pages[currentPage-1];
-    page.style.transform = 'rotateY(0deg)';
-    page.style.zIndex = pages.length - currentPage +1;
-    flipSound.play();
-  }
+// Başlangıçta sadece ilk sayfa görünür
+function initPages(){
+  pages.forEach((p,i)=> p.style.display = i===0 ? 'block':'none');
 }
 
-// Mobil çift dokunma
-let lastTap = 0;
-document.addEventListener('touchend', function(e){
-  const currentTime = new Date().getTime();
-  const tapLength = currentTime - lastTap;
-  const touchX = e.changedTouches[0].clientX;
-  if(tapLength < 300 && tapLength > 0){
-    if(touchX > window.innerWidth/2){
-      turnNext();
-    } else {
-      turnPrev();
+// Sayfa geçişleri
+function turnNext(){
+  if(currentPage < pages.length-1){
+    pages[currentPage].style.display = 'none';
+    currentPage++;
+    pages[currentPage].style.display = 'block';
+    flipSound.play();
+    
+    // İlk geçişte yağmur başlasın
+    if(!rainStarted){
+      startRain();
+      rainStarted = true;
     }
   }
-  lastTap = currentTime;
-});
+}
 
 // Yağmur efekti
 function createRain() {
   const container = document.getElementById('rain-container');
-  const drops = 100;
+  const drops = 150;
   for(let i=0;i<drops;i++){
     const drop = document.createElement('div');
     drop.className = 'raindrop';
     drop.style.left = Math.random()*100 + 'vw';
-    drop.style.animationDuration = (0.5+Math.random()*1.5)+'s';
+    drop.style.animationDuration = (0.5+Math.random()*2)+'s';
     drop.style.animationDelay = (Math.random()*5)+'s';
     container.appendChild(drop);
   }
 }
 
-// Başlat
-window.onload = () => {
-  loadPDF();
+// Yağmur başlatma ve sesi
+function startRain() {
   createRain();
-  rainSound.play().catch(()=>console.warn('Tarayıcı otomatik oynatmayı engelledi.'));
+  try { rainSound.play(); } catch(e){ console.warn(e); }
+}
+
+// Dokunma veya tıklama ile sayfa geçişi (mobil)
+function setupNavigation(){
+  document.addEventListener('touchend', function(e){
+    turnNext();
+  });
+  document.addEventListener('click', function(e){
+    turnNext();
+  });
+}
+
+// Başlat
+window.onload = async () => {
+  await loadPDF();
+  initPages();
+  setupNavigation();
 }
 </script>
+
 </body>
 </html>
